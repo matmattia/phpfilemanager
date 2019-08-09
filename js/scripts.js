@@ -16,6 +16,41 @@ var phpfilebrowser = {
 			}
 		}));
 	},
+	'ajaxJson': function(url, method, data, success, error) {
+		var xhr = new XMLHttpRequest(), formData = null, k = null;
+		if (method == 'GET' && data) {
+			url += (url.indexOf('?') >= 0 ? '&' : '?') + Object.keys(data).reduce(function(a, k) {
+				a.push(k + '=' + encodeURIComponent(data[k]));
+				return a;
+			}, []).join('&');
+			data = null;
+		}
+		xhr.open(method || 'POST', url, true);
+		xhr.addEventListener('readystatechange', function() {
+			var json = null;
+			if (xhr.readyState == 4 && xhr.status == 200) {
+				try {
+					json = JSON.parse(xhr.response);
+					if (json.ok && json.ok == 1) {
+						success(json);
+					} else {
+						error(json);
+					}
+				} catch (e) {
+					error();
+				}
+			} else if (xhr.readyState == 4 && xhr.status != 200) {
+				error();
+			}
+		});
+		if (data) {
+			formData = new FormData();
+			for (k in data) {
+				formData.append(k, data[k]);
+			}
+		}
+		xhr.send(formData);
+	},
 	'showContextMenu': function(items, pos) {
 		var l = items.length, i = 0, nav = null, ul = null, li = null, a = null, label = null;
 		if (l > 0) {
@@ -77,8 +112,14 @@ phpfilebrowser_directory = {
 				{
 					'label': phpfilebrowser_lang.__('New directory'),
 					'function': function(e) {
+						var n = prompt(phpfilebrowser_lang.__('New directory name?'), phpfilebrowser_lang.__('New directory'));
 						e.preventDefault();
-						console.log('Prova');
+						if (n !== null) {
+							that.ajaxJsonUpdateDirectory(dir, 'index.php', 'GET', {
+								'dir': dir.getAttribute('data-path') || '',
+								'new_dir': n
+							}, 'Error on creating directory.');
+						}
 					}
 				}
 			],
@@ -99,23 +140,21 @@ phpfilebrowser_directory = {
 		this.classList.remove('directory-drag-over');
 	},
 	'uploadDirFile': function(d, f) {
-		var xhr = new XMLHttpRequest(), formData = new FormData();
-		xhr.open('POST', 'index.php?upload=1&dir=' + (d.getAttribute('data-path') || ''), true);
-		xhr.addEventListener('readystatechange', function(e) {
-			var el = null;
-			if (xhr.readyState == 4 && xhr.status == 200) {
-				el = document.createElement('div');
-				el.innerHTML = xhr.response;
-				rd = el.getElementsByClassName('directory');
-				if (rd.length > 0) {
-					d.innerHTML = rd[0].innerHTML;
-				}
-			} else if (xhr.readyState == 4 && xhr.status != 200) {
-				phpfilebrowser_messenger.error(phpfilebrowser_lang.__('Error on upload'));
+		this.ajaxJsonUpdateDirectory(d, 'index.php?upload=1&dir=' + (d.getAttribute('data-path') || ''), 'POST', {
+			'file': f
+		}, 'Error on upload');
+	},
+	'ajaxJsonUpdateDirectory': function(d, url, method, data, error_msg) {
+		phpfilebrowser.ajaxJson(url, method, data, function(r) {
+			var el = document.createElement('div'), rd = null;
+			el.innerHTML = r.html;
+			rd = el.getElementsByClassName('directory');
+			if (rd.length > 0) {
+				d.innerHTML = rd[0].innerHTML;
 			}
+		}, function(r) {
+			phpfilebrowser_messenger.error(r && r.msg ? r.msg : phpfilebrowser_lang.__(error_msg));
 		});
-		formData.append('file', f);
-		xhr.send(formData);
 	}
 },
 phpfilebrowser_lang = {

@@ -132,4 +132,19 @@ class Dir extends File {
 		}
 		return $res;
 	}
+	
+	/**
+	 * Crea una sottocartella
+	 * @access public
+	 * @param string $dir nome della sottocartella
+	 * @return boolean
+	 */
+	public function newDir($dir) {
+		$res = false;
+		$dir = File::cleanName($dir);
+		if ($dir !== '') {
+			$res = @mkdir($this->getFullPath().$dir);
+		}
+		return $res;
+	}
 }
