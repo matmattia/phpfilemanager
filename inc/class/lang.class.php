@@ -64,6 +64,17 @@ class Lang{
 	}
 	
 	/**
+	 * Restituisce tutti i valori dei testi
+	 * @access public
+	 * @static
+	 * @return string
+	 */
+	public static function getAll() {
+		self::init();
+		return array_merge(self::$default_values, self::$values);
+	}
+	
+	/**
 	 * Verifica che una lingua esista
 	 * @access private
 	 * @static

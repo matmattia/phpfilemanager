@@ -12,6 +12,13 @@ class Dir extends File {
 	}
 	
 	/**
+	 * @see File::getFAIconClass
+	 */
+	public function getFAIconClass() {
+		return 'far fa-folder';
+	}
+	
+	/**
 	 * Restituisce i file della cartella
 	 * @access public
 	 * @param array $params parametri vari
@@ -47,7 +54,8 @@ class Dir extends File {
 					'name' => $file->getName(),
 					'size' => $file->getSize(),
 					'print_size' => $file->printSize(),
-					'is_dir' => $file instanceof Dir
+					'is_dir' => $file instanceof Dir,
+					'fa_icon' => $file->getFAIcon()
 				);
 				unset($file);
 				if ($do_order) {
@@ -82,6 +90,46 @@ class Dir extends File {
 		}
 		$params['info'] = true;
 		$files = $this->getFiles($params);
-		return Theme::printTpl('file_list.php', array('files' => $files, 'num_files' => count($files)));
+		return Theme::printTpl('file_list.php', array(
+			'path' => $this->getPath(),
+			'files' => $files,
+			'num_files' => count($files)
+		));
+	}
+	
+	/**
+	 * Carica un file nella cartella
+	 * @access public
+	 * @param array $file dati del file
+	 * @return boolean
+	 */
+	public function upload($file) {
+		$res = false;
+		if (is_array($file) && isset($file['tmp_name']) && is_string($file['tmp_name']) && is_uploaded_file($file['tmp_name'])) {
+			if (!isset($file['name']) || !is_string($file['name']) || trim($file['name']) === '') {
+				$file['name'] = basename($file['tmp_name']);
+			}
+			$num = 0;
+			do {
+				if ($num > 0) {
+					$ext = strrchr($file['name'], '.');
+					if ($ext === false || $ext == $file['name']) {
+						$filename = $file['name'].'-'.$num;
+					} else {
+						$filename = substr($file['name'], 0, -strlen($ext)).'-'.$num.$ext;
+					}
+					unset($ext);
+				} else {
+					$filename = $file['name'];
+				}
+				$path = $this->getFullPath().$filename;
+				unset($filename);
+				$num++;
+			} while (is_file($path));
+			unset($num);
+			$res = @move_uploaded_file($file['tmp_name'], $path);
+			unset($path);
+		}
+		return $res;
 	}
 }

@@ -58,7 +58,7 @@ class File {
 		$dir_path = $dir->getFullPath();
 		unset($dir);
 		$dir_path_l = strlen($dir_path);
-		if (strlen($path) > $dir_path_l  && substr($path, 0, $dir_path_l) == $dir_path) {
+		if (strlen($path) >= $dir_path_l  && substr($path, 0, $dir_path_l) == $dir_path) {
 			$path = substr($path, $dir_path_l);
 		}
 		unset($dir_path, $dir_path_l);
@@ -127,6 +127,74 @@ class File {
 			$i++;
 		}
 		return round($size / $d * 1024).' '.$u[$i];
+	}
+	
+	/**
+	 * Restituisce l'icona di Font Awesome del file
+	 * @access public
+	 * @return string
+	 */
+	public function getFAIcon() {
+		$class = $this->getFAIconClass();
+		return $class ? '<span class="'.html($class).'"></span>' : '';
+	}
+	
+	/**
+	 * Restituisce la classe dell'icona di Font Awesome del file
+	 * @access public
+	 * @return string
+	 */
+	public function getFAIconClass() {
+		switch (strtolower(strrchr($this->getFullPath(), '.'))) {
+			case '.csv':
+				$class = 'fas fa-file-csv';
+			break;
+			case '.doc':
+			case '.docx':
+				$class = 'far fa-file-word';
+			break;
+			case '.htm':
+			case '.html':
+				$class = 'far fa-file-code';
+			break;
+			case '.gif':
+			case '.jpeg':
+			case '.jpg':
+			case '.png':
+				$class = 'far fa-file-image';
+			break;
+			case '.mp3':
+				$class = 'far fa-file-audio';
+			break;
+			case '.mp4':
+				$class = 'far fa-file-video';
+			break;
+			case '.pdf':
+				$class = 'far fa-file-pdf';
+			break;
+			case '.php':
+				$class = 'fab fa-php';
+			break;
+			case '.ppt':
+			case '.pptx':
+				$class = 'far fa-file-powerpoint';
+			break;
+			case '.rar':
+			case '.zip':
+				$class = 'far fa-file-archive';
+			break;
+			case '.txt':
+				$class = 'far fa-file-alt';
+			break;
+			case '.xls':
+			case '.xlsx':
+				$class = 'far fa-file-excel';
+			break;
+			default:
+				$class = 'far fa-file';
+			break;
+		}
+		return $class;
 	}
 	
 	/**
