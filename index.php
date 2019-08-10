@@ -4,6 +4,23 @@ require_once('inc/includer.php');
 
 $body = $error = null;
 
+if (isset($_POST['delete'])) {
+	$json = array('ok' => 0);
+	try {
+		$file = File::getObject(Config::get('directory').str_replace('..', '', $_POST['delete']));
+		if ($file) {
+			$dir = new Dir($file->getDirPath());
+			if ($file->delete()) {
+				$json['ok'] = 1;
+				$json['html'] = $dir->printFiles();
+			}
+		}
+	} catch (Exception $e) {
+	}
+	echo json_encode($json);
+	exit();
+}
+
 $directory_path = null;
 if (isset($_GET['dir']) && is_string($_GET['dir']) && trim($_GET['dir']) !== '') {
 	$directory_path = $_GET['dir'];

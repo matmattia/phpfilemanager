@@ -135,6 +135,31 @@ phpfilebrowser_directory = {
 				'y': e.clientY
 			});
 		});
+		this.initLoad(dir);
+	},
+	'initLoad': function(dir) {
+		var that = this, files = dir.getElementsByClassName('directory-file'), l = files.length, i = 0;
+		for (i = 0; i < l; i++) {
+			files[i].addEventListener('contextmenu', function(e) {
+				var file = this;
+				e.stopPropagation();
+				e.preventDefault();
+				phpfilebrowser.showContextMenu([
+					{
+						'label': phpfilebrowser_lang.__('Delete'),
+						'fa_icon': 'far fa-trash-alt',
+						'function': function(e) {
+							e.preventDefault();
+							that.deleteDirFile(dir, file);
+						}
+					}
+				],
+				{
+					'x': e.clientX,
+					'y': e.clientY
+				});
+			});
+		}
 	},
 	'onDragEnter': function(e) {
 		e.preventDefault();
@@ -160,13 +185,22 @@ phpfilebrowser_directory = {
 			'file': f
 		}, 'Error on upload');
 	},
+	'deleteDirFile': function(d, f) {
+		if (confirm(phpfilebrowser_lang.__('Are you sure to delete this element?'))) {
+			this.ajaxJsonUpdateDirectory(d, 'index.php', 'POST', {
+				'delete': f.getAttribute('data-path')
+			}, 'Error on delete');
+		}
+	},
 	'ajaxJsonUpdateDirectory': function(d, url, method, data, error_msg) {
+		var that = this;
 		phpfilebrowser.ajaxJson(url, method, data, function(r) {
 			var el = document.createElement('div'), rd = null;
 			el.innerHTML = r.html;
 			rd = el.getElementsByClassName('directory');
 			if (rd.length > 0) {
 				d.innerHTML = rd[0].innerHTML;
+				that.initLoad(d);
 			}
 		}, function(r) {
 			phpfilebrowser_messenger.error(r && r.msg ? r.msg : phpfilebrowser_lang.__(error_msg));
@@ -197,6 +231,29 @@ phpfilebrowser_toolbar = {
 						var dir = phpfilebrowser_directory.getDivByPath(this.getAttribute('data-path'));
 						if (dir) {
 							phpfilebrowser_directory.newDir(dir);
+						}
+						e.preventDefault();
+					});
+				break;
+				case 'upload':
+					b[i].addEventListener('click', function(e) {
+						var dir = phpfilebrowser_directory.getDivByPath(this.getAttribute('data-path')), inp = null;
+						if (dir) {
+							inp = document.createElement('input');
+							inp.setAttribute('type', 'file');
+							inp.classList.add('fake-input');
+							document.body.append(inp);
+							inp.dispatchEvent(new MouseEvent('click', {
+								'view': window,
+								'bubbles': true,
+								'cancelable': true
+							}));
+							inp.addEventListener('change', function(e) {
+								var l = this.files.length, i = 0;
+								for (i = 0; i < l; i++) {
+									phpfilebrowser_directory.uploadDirFile(dir, this.files[i]);
+								}
+							});
 						}
 						e.preventDefault();
 					});

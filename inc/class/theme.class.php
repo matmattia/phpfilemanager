@@ -1,13 +1,34 @@
 <?php
-class Theme{
+/**
+ * La classe Theme gestisce i template
+ */
+class Theme {
+	/**
+	 * Tema in uso
+	 * @access private
+	 * @static
+	 * @var string
+	 */
 	private static $theme;
+	
+	/**
+	 * Tema di default
+	 * @access private
+	 * @static
+	 * @var string
+	 */
 	private static $default_theme;
 	
+	/**
+	 * Inizializza il tema
+	 * @access private
+	 * @static
+	 */
 	private static function init(){
-		if(!is_string(self::$theme)){
+		if (!is_string(self::$theme)) {
 			self::$default_theme = Config::getDefault('theme');
 			$theme = File::cleanName(Config::get('theme'));
-			self::$theme = trim($theme)!='' && is_dir(THEMES_PATH.$theme) ? $theme : $this->default_theme;
+			self::$theme = trim($theme) !== '' && is_dir(THEMES_PATH.$theme) ? $theme : $this->default_theme;
 			unset($theme);
 		}
 	}

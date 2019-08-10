@@ -1,7 +1,10 @@
 <?php
+/**
+ * La classe Dir gestisce le cartelle
+ */
 class Dir extends File {
 	/**
-	 * @see File::__construct
+	 * @see File::__construct()
 	 */
 	public function __construct($path) {
 		if (is_string($path) && trim($path) !== '' && is_dir($path)) {
@@ -12,10 +15,17 @@ class Dir extends File {
 	}
 	
 	/**
-	 * @see File::getFAIconClass
+	 * @see File::getFAIconClass()
 	 */
 	public function getFAIconClass() {
 		return 'far fa-folder';
+	}
+	
+	/**
+	 * @see File::delete()
+	 */
+	public function delete() {
+		return @rmdir($this->getFullPath());
 	}
 	
 	/**

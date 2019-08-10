@@ -1,4 +1,7 @@
 <?php
+/**
+ * La classe File gestisce i file
+ */
 class File {
 	/**
 	 * Percorso del file
@@ -195,6 +198,15 @@ class File {
 			break;
 		}
 		return $class;
+	}
+	
+	/**
+	 * Elimina il file
+	 * @access public
+	 * @return boolean
+	 */
+	public function delete() {
+		return @unlink($this->getFullPath());
 	}
 	
 	/**

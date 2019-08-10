@@ -23,6 +23,13 @@ a{
 a:hover,a:active{
 	text-decoration: none;
 }
+.fake-input{
+	position: absolute;
+	left: -999px;
+	visibility: hidden;
+	width: 0;
+	height: 0;
+}
 
 /* Menu contestuale */
 .context-menu{

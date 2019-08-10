@@ -1,6 +1,7 @@
 <div class="toolbar">
 	<ul>
 		<li><button type="button" data-operation="new-directory" data-path="<?php echo html($path);?>"><span class="fas fa-folder-plus"></span> <?php echo __('New directory');?></button></li>
+		<li><button type="button" data-operation="upload" data-path="<?php echo html($path);?>"><span class="fas fa-upload"></span><?php echo __('Upload a file');?></button></li>
 	</ul>
 </div>
 
@@ -25,7 +26,7 @@
 <div class="directory" data-path="<?php echo html($path);?>">
 	<?php if ($num_files > 0) : ?>
 		<?php for ($i = 0; $i < $num_files; $i++) : ?>
-			<div class="directory-file">
+			<div class="directory-file" data-path="<?php echo html($files[$i]['path']);?>">
 				<?php if ($files[$i]['is_dir']) : ?>
 					<a href="?dir=<?php echo rawurlencode($files[$i]['path']);?>">
 				<?php endif;?>
