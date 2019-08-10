@@ -90,10 +90,29 @@ class Dir extends File {
 		}
 		$params['info'] = true;
 		$files = $this->getFiles($params);
+		$breadcrumbs = array();
+		$path = $this->getPath();
+		if ($path === '') {
+			$breadcrumbs[] = array('label' => '/');
+		} else {
+			do {
+				$path = dirname($path);
+				if ($path == '.') {
+					$path = '';
+				}
+				array_unshift($breadcrumbs, array(
+					'href' => 'index.php?dir='.rawurlencode($path),
+					'label' => $path === '' ? '/' : basename($path)
+				));
+			} while ($path !== '');
+			$breadcrumbs[] = array('label' => $this->getName());
+		}
+		unset($path);
 		return Theme::printTpl('file_list.php', array(
 			'path' => $this->getPath(),
 			'files' => $files,
-			'num_files' => count($files)
+			'num_files' => count($files),
+			'breadcrumbs' => $breadcrumbs
 		));
 	}
 	

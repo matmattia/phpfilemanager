@@ -7,6 +7,7 @@ var phpfilebrowser = {
 		for (i = 0; i < l; i++) {
 			phpfilebrowser_directory.init(dirs[i]);
 		}
+		phpfilebrowser_toolbar.init();
 	},
 	'selectfile': function() {
 		top.dispatchEvent(new MessageEvent('message', {
@@ -52,12 +53,20 @@ var phpfilebrowser = {
 		xhr.send(formData);
 	},
 	'showContextMenu': function(items, pos) {
-		var l = items.length, i = 0, nav = null, ul = null, li = null, a = null, label = null;
+		var l = items.length, i = 0, j = 0, nav = null, ul = null, li = null, a = null, icon = null, label = null;
 		if (l > 0) {
 			this.closeContextMenus();
 			ul = document.createElement('ul');
 			for (i = 0; i < l; i++) {
 				li = document.createElement('li');
+				icon = document.createElement('span');
+				icon.classList.add('context-menu-icon');
+				if (items[i].fa_icon) {
+					items[i].fa_icon = items[i].fa_icon.split(' ');
+					for (j = 0; j < items[i].fa_icon.length; j++) {
+						icon.classList.add(items[i].fa_icon[j]);
+					}
+				}
 				label = document.createTextNode(items[i].label);
 				if (items[i].href || items[i].function) {
 					a = document.createElement('a');
@@ -65,10 +74,13 @@ var phpfilebrowser = {
 					if (items[i].function) {
 						a.addEventListener('click', items[i].function);
 					}
+					a.appendChild(icon);
 					a.appendChild(label);
 					li.appendChild(a);
 				} else {
+					li.appendChild(icon);
 					li.appendChild(label);
+					li.classList.add('context-menu-separator');
 				}
 				ul.appendChild(li);
 			}
@@ -111,15 +123,10 @@ phpfilebrowser_directory = {
 			phpfilebrowser.showContextMenu([
 				{
 					'label': phpfilebrowser_lang.__('New directory'),
+					'fa_icon': 'fas fa-folder-plus',
 					'function': function(e) {
-						var n = prompt(phpfilebrowser_lang.__('New directory name?'), phpfilebrowser_lang.__('New directory'));
 						e.preventDefault();
-						if (n !== null) {
-							that.ajaxJsonUpdateDirectory(dir, 'index.php', 'GET', {
-								'dir': dir.getAttribute('data-path') || '',
-								'new_dir': n
-							}, 'Error on creating directory.');
-						}
+						that.newDir(dir);
 					}
 				}
 			],
@@ -139,6 +146,15 @@ phpfilebrowser_directory = {
 		e.stopPropagation();
 		this.classList.remove('directory-drag-over');
 	},
+	'newDir': function(dir) {
+		var n = prompt(phpfilebrowser_lang.__('New directory name?'), phpfilebrowser_lang.__('New directory'));
+		if (n !== null) {
+			this.ajaxJsonUpdateDirectory(dir, 'index.php', 'GET', {
+				'dir': dir.getAttribute('data-path') || '',
+				'new_dir': n
+			}, 'Error on creating directory.');
+		}
+	},
 	'uploadDirFile': function(d, f) {
 		this.ajaxJsonUpdateDirectory(d, 'index.php?upload=1&dir=' + (d.getAttribute('data-path') || ''), 'POST', {
 			'file': f
@@ -155,6 +171,9 @@ phpfilebrowser_directory = {
 		}, function(r) {
 			phpfilebrowser_messenger.error(r && r.msg ? r.msg : phpfilebrowser_lang.__(error_msg));
 		});
+	},
+	'getDivByPath': function(path) {
+		return document.querySelector('.directory[data-path="' + (path || '') +'"]');
 	}
 },
 phpfilebrowser_lang = {
@@ -166,6 +185,24 @@ phpfilebrowser_lang = {
 phpfilebrowser_messenger = {
 	'error': function(msg) {
 		alert(msg);
+	}
+},
+phpfilebrowser_toolbar = {
+	'init': function() {
+		var b = document.querySelectorAll('.toolbar [data-operation]'), l = b.length, i = 0;
+		for (i = 0; i < l; i++) {
+			switch (b[i].getAttribute('data-operation')) {
+				case 'new-directory':
+					b[i].addEventListener('click', function(e) {
+						var dir = phpfilebrowser_directory.getDivByPath(this.getAttribute('data-path'));
+						if (dir) {
+							phpfilebrowser_directory.newDir(dir);
+						}
+						e.preventDefault();
+					});
+				break;
+			}
+		}
 	}
 };
 
