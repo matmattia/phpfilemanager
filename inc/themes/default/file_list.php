@@ -26,7 +26,7 @@
 <div class="directory" data-path="<?php echo html($path);?>">
 	<?php if ($num_files > 0) : ?>
 		<?php for ($i = 0; $i < $num_files; $i++) : ?>
-			<div class="directory-file" data-path="<?php echo html($files[$i]['path']);?>">
+			<div class="directory-file" data-path="<?php echo html($files[$i]['path']);?>" data-name="<?php echo html($files[$i]['name']);?>">
 				<?php if ($files[$i]['is_dir']) : ?>
 					<a href="?dir=<?php echo rawurlencode($files[$i]['path']);?>">
 				<?php endif;?>

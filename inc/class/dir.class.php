@@ -15,6 +15,16 @@ class Dir extends File {
 	}
 	
 	/**
+	 * Stabilisce se si tratta della cartella principale
+	 * @access public
+	 * @return boolean
+	 */
+	public function isMain() {
+		$dir = new Dir(Config::get('directory'));
+		return $this->getFullPath() == $dir->getFullPath();
+	}
+	
+	/**
 	 * @see File::getFAIconClass()
 	 */
 	public function getFAIconClass() {
@@ -22,10 +32,46 @@ class Dir extends File {
 	}
 	
 	/**
+	 * @see File::rename()
+	 */
+	public function rename($name, &$msg = array()) {
+		$res = false;
+		if (!is_array($msg)) {
+			$msg = array();
+		}
+		if ($this->isMain()) {
+			$msg[] = Lang::get('You can’t rename the main directory.');
+		} else {
+			$res = parent::rename($name, $msg);
+		}
+		return $res;
+	}
+	
+	/**
 	 * @see File::delete()
 	 */
-	public function delete() {
-		return @rmdir($this->getFullPath());
+	public function delete(&$msg = array()) {
+		$res = false;
+		if (!is_array($msg)) {
+			$msg = array();
+		}
+		if ($this->isMain()) {
+			$msg[] = Lang::get('You can’t delete the main directory.');
+		} else {
+			$files = $this->getFiles();
+			$counter = count($files);
+			for ($i = 0; $i < $counter; $i++) {
+				try {
+					$file = File::getObject($files[$i]);
+					$file->delete();
+					unset($file);
+				} catch (Exception $e) {
+				}
+			}
+			unset($i, $counter, $files);
+			$res = @rmdir($this->getFullPath());
+		}
+		return $res;
 	}
 	
 	/**
@@ -130,10 +176,14 @@ class Dir extends File {
 	 * Carica un file nella cartella
 	 * @access public
 	 * @param array $file dati del file
+	 * @param array $msg messaggi
 	 * @return boolean
 	 */
-	public function upload($file) {
+	public function upload($file, &$msg = array()) {
 		$res = false;
+		if (!is_array($msg)) {
+			$msg = array();
+		}
 		if (is_array($file) && isset($file['tmp_name']) && is_string($file['tmp_name']) && is_uploaded_file($file['tmp_name'])) {
 			if (!isset($file['name']) || !is_string($file['name']) || trim($file['name']) === '') {
 				$file['name'] = basename($file['tmp_name']);
@@ -165,14 +215,20 @@ class Dir extends File {
 	/**
 	 * Crea una sottocartella
 	 * @access public
-	 * @param string $dir nome della sottocartella
+	 * @param string $name nome della sottocartella
+	 * @param array $msg messaggi
 	 * @return boolean
 	 */
-	public function newDir($dir) {
+	public function newDir($name, &$msg = array()) {
 		$res = false;
-		$dir = File::cleanName($dir);
-		if ($dir !== '') {
-			$res = @mkdir($this->getFullPath().$dir);
+		if (!is_array($msg)) {
+			$msg = array();
+		}
+		$name = self::cleanName($name);
+		if ($name === '') {
+			$msg[] = Lang::get('You must enter a name.');
+		} else {
+			$res = @mkdir($this->getFullPath().$name);
 		}
 		return $res;
 	}

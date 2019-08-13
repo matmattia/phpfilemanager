@@ -201,11 +201,45 @@ class File {
 	}
 	
 	/**
-	 * Elimina il file
+	 * Rinomina il file
 	 * @access public
+	 * @param string $name nuovo nome
+	 * @param array $msg messaggi
 	 * @return boolean
 	 */
-	public function delete() {
+	public function rename($name, &$msg = array()) {
+		$res = false;
+		if (!is_array($msg)) {
+			$msg = array();
+		}
+		$name = self::cleanName($name);
+		if ($name === '') {
+			$msg[] = Lang::get('You must enter a name.');
+		} else {
+			$old_path = $this->getFullPath();
+			$new_path = $this->getDirPath().$name;
+			if ($old_path == $new_path) {
+				$res = true;
+			} else if (file_exists($new_path)) {
+				$msg[] = Lang::get('A file or folder with this name already exists.');
+			} else {
+				$res = rename($old_path, $new_path);
+			}
+			unset($old_path, $new_path);
+		}
+		return $res;
+	}
+	
+	/**
+	 * Elimina il file
+	 * @access public
+	 * @param array $msg messaggi
+	 * @return boolean
+	 */
+	public function delete(&$msg = array()) {
+		if (!is_array($msg)) {
+			$msg = array();
+		}
 		return @unlink($this->getFullPath());
 	}
 	

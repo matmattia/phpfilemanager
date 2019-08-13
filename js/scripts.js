@@ -152,6 +152,14 @@ phpfilebrowser_directory = {
 							e.preventDefault();
 							that.deleteDirFile(dir, file);
 						}
+					},
+					{
+						'label': phpfilebrowser_lang.__('Rename'),
+						'fa_icon': 'far fa-edit',
+						'function': function(e) {
+							e.preventDefault();
+							that.renameDirFile(dir, file);
+						}
 					}
 				],
 				{
@@ -174,22 +182,36 @@ phpfilebrowser_directory = {
 	'newDir': function(dir) {
 		var n = prompt(phpfilebrowser_lang.__('New directory name?'), phpfilebrowser_lang.__('New directory'));
 		if (n !== null) {
-			this.ajaxJsonUpdateDirectory(dir, 'index.php', 'GET', {
-				'dir': dir.getAttribute('data-path') || '',
-				'new_dir': n
+			this.ajaxJsonUpdateDirectory(dir, 'index.php', 'POST', {
+				'operation': 'new_dir',
+				'path': dir.getAttribute('data-path') || '',
+				'name': n
 			}, 'Error on creating directory.');
 		}
 	},
 	'uploadDirFile': function(d, f) {
-		this.ajaxJsonUpdateDirectory(d, 'index.php?upload=1&dir=' + (d.getAttribute('data-path') || ''), 'POST', {
+		this.ajaxJsonUpdateDirectory(d, 'index.php', 'POST', {
+			'operation': 'upload',
+			'path': d.getAttribute('data-path') || '',
 			'file': f
-		}, 'Error on upload');
+		}, 'Error on upload.');
 	},
 	'deleteDirFile': function(d, f) {
 		if (confirm(phpfilebrowser_lang.__('Are you sure to delete this element?'))) {
 			this.ajaxJsonUpdateDirectory(d, 'index.php', 'POST', {
-				'delete': f.getAttribute('data-path')
-			}, 'Error on delete');
+				'operation': 'delete',
+				'path': f.getAttribute('data-path')
+			}, 'Error on delete.');
+		}
+	},
+	'renameDirFile': function(d, f) {
+		var n = prompt(phpfilebrowser_lang.__('New name?'), f.getAttribute('data-name') || '');
+		if (n !== null) {
+			this.ajaxJsonUpdateDirectory(d, 'index.php', 'POST', {
+				'operation': 'rename',
+				'path': f.getAttribute('data-path'),
+				'name': n
+			}, 'Error on renaming.');
 		}
 	},
 	'ajaxJsonUpdateDirectory': function(d, url, method, data, error_msg) {
@@ -203,6 +225,25 @@ phpfilebrowser_directory = {
 				that.initLoad(d);
 			}
 		}, function(r) {
+			if (r && r.msg) {
+				switch (typeof r.msg) {
+					case 'object':
+						if (Array.isArray(r.msg)) {
+							r.msg = r.msg.join("\r\n");
+						} else {
+							r.msg = null;
+						}
+					break;
+					case 'string':
+						if (r.msg == '') {
+							r.msg = null;
+						}
+					break;
+					default:
+						r.msg = null;
+					break;
+				}
+			}
 			phpfilebrowser_messenger.error(r && r.msg ? r.msg : phpfilebrowser_lang.__(error_msg));
 		});
 	},

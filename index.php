@@ -4,46 +4,52 @@ require_once('inc/includer.php');
 
 $body = $error = null;
 
-if (isset($_POST['delete'])) {
-	$json = array('ok' => 0);
-	try {
-		$file = File::getObject(Config::get('directory').str_replace('..', '', $_POST['delete']));
-		if ($file) {
-			$dir = new Dir($file->getDirPath());
-			if ($file->delete()) {
-				$json['ok'] = 1;
-				$json['html'] = $dir->printFiles();
+if (isset($_REQUEST['operation']) && is_string($_REQUEST['operation']) && trim($_REQUEST['operation']) !== '') {
+	$json = array('ok' => 0, 'msg' => array());
+	if (isset($_REQUEST['path']) && is_string($_REQUEST['path'])) {
+		try {
+			$file = File::getObject(Config::get('directory').str_replace('..', '', $_REQUEST['path']));
+			if ($file) {
+				$res = false;
+				$dir = null;
+				switch ($_REQUEST['operation']) {
+					case 'delete':
+						$dir = new Dir($file->getDirPath());
+						$res = $file->delete();
+					break;
+					case 'new_dir':
+						$dir = $file;
+						$res = $dir->newDir(isset($_REQUEST['name']) ? $_REQUEST['name'] : null, $json['msg']);
+					break;
+					case 'rename':
+						$dir = new Dir($file->getDirPath());
+						$res = $file->rename(isset($_REQUEST['name']) ? $_REQUEST['name'] : null, $json['msg']);
+					break;
+					case 'upload':
+						$dir = $file;
+						$res = $dir->upload(isset($_FILES['file']) ? $_FILES['file'] : null, $json['msg']);
+					break;
+				}
+				if ($res) {
+					$json['ok'] = 1;
+					if ($dir) {
+						$json['html'] = $dir->printFiles();
+					}
+				}
+				unset($res, $dir);
 			}
+			unset($file);
+		} catch (Exception $e) {
 		}
-	} catch (Exception $e) {
 	}
 	echo json_encode($json);
 	exit();
 }
 
-$directory_path = null;
-if (isset($_GET['dir']) && is_string($_GET['dir']) && trim($_GET['dir']) !== '') {
-	$directory_path = $_GET['dir'];
-}
 try {
-	$dir = new Dir(Config::get('directory').str_replace('..', '', $directory_path));
-	if (isset($_GET['upload'])) {
-		$json = array('ok' => 0);
-		if (isset($_FILES['file']) && $dir->upload($_FILES['file'])) {
-			$json['ok'] = 1;
-			$json['html'] = $dir->printFiles();
-		}
-		echo json_encode($json);
-		exit();
-	} else if (isset($_GET['new_dir'])) {
-		$json = array('ok' => 0);
-		if ($dir->newDir($_GET['new_dir'])) {
-			$json['ok'] = 1;
-			$json['html'] = $dir->printFiles();
-		}
-		echo json_encode($json);
-		exit();
-	}
+	$dir = new Dir(Config::get('directory').(isset($_GET['dir']) && is_string($_GET['dir']) && trim($_GET['dir']) !== ''
+		? str_replace('..', '', $_GET['dir'])
+		: ''));
 	$body = $dir->printFiles();
 } catch (Exception $e) {
 	$error = 'Directory not found.';
