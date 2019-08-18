@@ -69,6 +69,15 @@ class File {
 	}
 	
 	/**
+	 * Restituisce il percorso pubblico
+	 * @access public
+	 * @return string
+	 */
+	public function getPublicPath() {
+		return Config::get('public_directory').DIRECTORY_SEPARATOR.$this->getPath();
+	}
+	
+	/**
 	 * Restituisce il nome del file
 	 * @access public
 	 * @return string

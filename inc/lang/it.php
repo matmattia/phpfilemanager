@@ -1,11 +1,14 @@
 <?php
 $lang = array(
 	'lang_code' => 'it',
+	'You don’t have permission to access this page.' => 'Non hai i permessi per accedere a questa pagina.',
+	'You don’t have permission to perform this operation.' => 'Non hai i permessi per eseguire questa operazione.',
 	'Filename' => 'Nome',
 	'Filesize' => 'Dimensione',
 	'Filetype' => 'Tipo',
 	'Upload a file' => 'Carica un file',
 	'Error on upload.' => 'Errore nel caricamento.',
+	'Select' => 'Seleziona',
 	'Delete' => 'Elimina',
 	'Are you sure to delete this element?' => 'Sei sicuro di voler eliminare questo elemento?',
 	'Error on delete.' => 'Errore nell’eliminazione.',

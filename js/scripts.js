@@ -1,4 +1,6 @@
 var phpfilebrowser = {
+	'opener': '',
+	'opener_params': {},
 	'init': function() {
 		var that = this, dirs = document.getElementsByClassName('directory'), l = dirs.length, i = 0;
 		document.body.addEventListener('click', function() {
@@ -8,14 +10,6 @@ var phpfilebrowser = {
 			phpfilebrowser_directory.init(dirs[i]);
 		}
 		phpfilebrowser_toolbar.init();
-	},
-	'selectfile': function() {
-		top.dispatchEvent(new MessageEvent('message', {
-			'data': {
-				'sender': 'matfilemanager',
-				'url': ''
-			}
-		}));
 	},
 	'ajaxJson': function(url, method, data, success, error) {
 		var xhr = new XMLHttpRequest(), formData = null, k = null;
@@ -141,28 +135,36 @@ phpfilebrowser_directory = {
 		var that = this, files = dir.getElementsByClassName('directory-file'), l = files.length, i = 0;
 		for (i = 0; i < l; i++) {
 			files[i].addEventListener('contextmenu', function(e) {
-				var file = this;
+				var file = this, menu = [];
 				e.stopPropagation();
 				e.preventDefault();
-				phpfilebrowser.showContextMenu([
-					{
-						'label': phpfilebrowser_lang.__('Delete'),
-						'fa_icon': 'far fa-trash-alt',
+				if (phpfilebrowser.opener && file.getAttribute('data-is-dir') != 1) {
+					menu.push({
+						'label': phpfilebrowser_lang.__('Select'),
+						'fa_icon': 'fas fa-check',
 						'function': function(e) {
 							e.preventDefault();
-							that.deleteDirFile(dir, file);
+							that.selectFile(file.getAttribute('data-public-path'));
 						}
-					},
-					{
-						'label': phpfilebrowser_lang.__('Rename'),
-						'fa_icon': 'far fa-edit',
-						'function': function(e) {
-							e.preventDefault();
-							that.renameDirFile(dir, file);
-						}
+					});
+				}
+				menu.push({
+					'label': phpfilebrowser_lang.__('Delete'),
+					'fa_icon': 'far fa-trash-alt',
+					'function': function(e) {
+						e.preventDefault();
+						that.deleteDirFile(dir, file);
 					}
-				],
-				{
+				});
+				menu.push({
+					'label': phpfilebrowser_lang.__('Rename'),
+					'fa_icon': 'far fa-edit',
+					'function': function(e) {
+						e.preventDefault();
+						that.renameDirFile(dir, file);
+					}
+				});
+				phpfilebrowser.showContextMenu(menu, {
 					'x': e.clientX,
 					'y': e.clientY
 				});
@@ -195,6 +197,21 @@ phpfilebrowser_directory = {
 			'path': d.getAttribute('data-path') || '',
 			'file': f
 		}, 'Error on upload.');
+	},
+	'selectFile': function(url) {
+		switch (phpfilebrowser.opener) {
+			case 'field_id':
+				top.document.getElementById(phpfilebrowser.opener_params.field_id || null).value = url;
+			break;
+			case 'tinymce5':
+				top.dispatchEvent(new MessageEvent('message', {
+					'data': {
+						'sender': 'phpfilemanager',
+						'url': url
+					}
+				}));
+			break;
+		}
 	},
 	'deleteDirFile': function(d, f) {
 		if (confirm(phpfilebrowser_lang.__('Are you sure to delete this element?'))) {

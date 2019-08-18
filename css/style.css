@@ -13,7 +13,7 @@ html,body{
 html{
 	height: 100%;
 }
-body {
+body{
 	min-height: 100%;
 }
 a{
@@ -165,17 +165,18 @@ a:hover,a:active{
 	font-size: 400%;
 }
 .directory-drag-over{
-	position: relative;
+	/*position: relative;*/
 }
 .directory-drag-over:after{
 	position: absolute;
-	top: 0;
 	bottom: 0;
 	left: 0;
 	right: 0;
+	padding-top: calc(44vh - 50px);
+	height: calc(100vh - 100px);
 	border: 5px dashed #000;
-	background-color: rgba(99, 99, 99, 0.5);
-	font-size: 5rem;
+	background-color: rgba(200, 200, 200, 0.7);
+	font-size: 6vh;
 	text-align: center;
 	vertical-align: middle;
 	

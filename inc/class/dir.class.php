@@ -105,6 +105,7 @@ class Dir extends File {
 				$files[$i] = array(
 					'full_path' => $file->getFullPath(),
 					'path' => $file->getPath(),
+					'public_path' => $file->getPublicPath(),
 					'directory' => $file->getDirPath(),
 					'directory_name' => $file->getDirName(),
 					'name' => $file->getName(),
@@ -147,23 +148,27 @@ class Dir extends File {
 		$params['info'] = true;
 		$files = $this->getFiles($params);
 		$breadcrumbs = array();
+		$home = array(
+			'label' => '',
+			'fa_icon' => '<span class="fas fa-home"></span>'
+		);
 		$path = $this->getPath();
 		if ($path === '') {
-			$breadcrumbs[] = array('label' => '/');
+			$breadcrumbs[] = $home;
 		} else {
 			do {
 				$path = dirname($path);
 				if ($path == '.') {
 					$path = '';
 				}
-				array_unshift($breadcrumbs, array(
+				array_unshift($breadcrumbs, array_merge(array(
 					'href' => 'index.php?dir='.rawurlencode($path),
-					'label' => $path === '' ? '/' : basename($path)
-				));
+					'label' => basename($path)
+				), $path === '' ? $home : array()));
 			} while ($path !== '');
 			$breadcrumbs[] = array('label' => $this->getName());
 		}
-		unset($path);
+		unset($path, $home);
 		return Theme::printTpl('file_list.php', array(
 			'path' => $this->getPath(),
 			'files' => $files,
