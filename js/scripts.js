@@ -46,6 +46,31 @@ var phpfilebrowser = {
 		}
 		xhr.send(formData);
 	},
+	'ajaxJsonOperation': function(url, method, data, success, error_msg) {
+		var that = this;
+		phpfilebrowser.ajaxJson(url, method, data, success, function(r) {
+			if (r && r.msg) {
+				switch (typeof r.msg) {
+					case 'object':
+						if (Array.isArray(r.msg)) {
+							r.msg = r.msg.join("\r\n");
+						} else {
+							r.msg = null;
+						}
+					break;
+					case 'string':
+						if (r.msg == '') {
+							r.msg = null;
+						}
+					break;
+					default:
+						r.msg = null;
+					break;
+				}
+			}
+			phpfilebrowser_messenger.error(r && r.msg ? r.msg : phpfilebrowser_lang.__(error_msg));
+		});
+	},
 	'showContextMenu': function(items, pos) {
 		var l = items.length, i = 0, j = 0, nav = null, ul = null, li = null, a = null, icon = null, label = null;
 		if (l > 0) {
@@ -135,16 +160,26 @@ phpfilebrowser_directory = {
 		var that = this, files = dir.getElementsByClassName('directory-file'), l = files.length, i = 0;
 		for (i = 0; i < l; i++) {
 			files[i].addEventListener('contextmenu', function(e) {
-				var file = this, menu = [];
+				var file = this, menu = [], is_dir = file.getAttribute('data-is-dir') == 1;
 				e.stopPropagation();
 				e.preventDefault();
-				if (phpfilebrowser.opener && file.getAttribute('data-is-dir') != 1) {
+				if (phpfilebrowser.opener && !is_dir) {
 					menu.push({
 						'label': phpfilebrowser_lang.__('Select'),
 						'fa_icon': 'fas fa-check',
 						'function': function(e) {
 							e.preventDefault();
 							that.selectFile(file.getAttribute('data-public-path'));
+						}
+					});
+				}
+				if (!is_dir) {
+					menu.push({
+						'label': phpfilebrowser_lang.__('Download'),
+						'fa_icon': 'fas fa-download',
+						'function': function(e) {
+							e.preventDefault();
+							that.downloadFile(file);
 						}
 					});
 				}
@@ -213,6 +248,14 @@ phpfilebrowser_directory = {
 			break;
 		}
 	},
+	'downloadFile': function(f) {
+		phpfilebrowser.ajaxJsonOperation('index.php', 'POST', {
+			'operation': 'check_download',
+			'path': f.getAttribute('data-path')
+		}, function(r) {
+			window.location.href = 'index.php?operation=download&path=' + encodeURIComponent(r.path);
+		}, 'Error on download.');
+	},
 	'deleteDirFile': function(d, f) {
 		if (confirm(phpfilebrowser_lang.__('Are you sure to delete this element?'))) {
 			this.ajaxJsonUpdateDirectory(d, 'index.php', 'POST', {
@@ -233,7 +276,7 @@ phpfilebrowser_directory = {
 	},
 	'ajaxJsonUpdateDirectory': function(d, url, method, data, error_msg) {
 		var that = this;
-		phpfilebrowser.ajaxJson(url, method, data, function(r) {
+		phpfilebrowser.ajaxJsonOperation(url, method, data, function(r) {
 			var el = document.createElement('div'), rd = null;
 			el.innerHTML = r.html;
 			rd = el.getElementsByClassName('directory');
@@ -241,31 +284,10 @@ phpfilebrowser_directory = {
 				d.innerHTML = rd[0].innerHTML;
 				that.initLoad(d);
 			}
-		}, function(r) {
-			if (r && r.msg) {
-				switch (typeof r.msg) {
-					case 'object':
-						if (Array.isArray(r.msg)) {
-							r.msg = r.msg.join("\r\n");
-						} else {
-							r.msg = null;
-						}
-					break;
-					case 'string':
-						if (r.msg == '') {
-							r.msg = null;
-						}
-					break;
-					default:
-						r.msg = null;
-					break;
-				}
-			}
-			phpfilebrowser_messenger.error(r && r.msg ? r.msg : phpfilebrowser_lang.__(error_msg));
-		});
+		}, error_msg);
 	},
 	'getDivByPath': function(path) {
-		return document.querySelector('.directory[data-path="' + (path || '') +'"]');
+		return document.querySelector('.directory[data-path="' + (path || '').replace(/\\/g, '\\\\') +'"]');
 	}
 },
 phpfilebrowser_lang = {

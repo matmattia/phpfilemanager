@@ -127,9 +127,18 @@ class Page {
 						$res = false;
 						$dir = null;
 						switch ($_REQUEST['operation']) {
+							case 'check_download':
+								if ($file->canDownload()) {
+									$res = true;
+									$json['path'] = $file->getPath();
+								}
+							break;
 							case 'delete':
 								$dir = new Dir($file->getDirPath());
 								$res = $file->delete();
+							break;
+							case 'download':
+								$file->download();
 							break;
 							case 'new_dir':
 								$dir = $file;

@@ -87,6 +87,17 @@ class File {
 	}
 	
 	/**
+	 * Restituisce l'estensione del file
+	 * @access public
+	 * @return string
+	 */
+	public function getExtension() {
+		$name = $this->getName();
+		$ext = strtolower(strrchr($name, '.'));
+		return $name == $ext ? null : substr($ext, 1);
+	}
+	
+	/**
 	 * Restituisce il percorso della cartella in cui si trova il file
 	 * @access public
 	 * @return string
@@ -157,49 +168,49 @@ class File {
 	 * @return string
 	 */
 	public function getFAIconClass() {
-		switch (strtolower(strrchr($this->getFullPath(), '.'))) {
-			case '.csv':
+		switch ($this->getExtension()) {
+			case 'csv':
 				$class = 'fas fa-file-csv';
 			break;
-			case '.doc':
-			case '.docx':
+			case 'doc':
+			case 'docx':
 				$class = 'far fa-file-word';
 			break;
-			case '.htm':
-			case '.html':
+			case 'htm':
+			case 'html':
 				$class = 'far fa-file-code';
 			break;
-			case '.gif':
-			case '.jpeg':
-			case '.jpg':
-			case '.png':
+			case 'gif':
+			case 'jpeg':
+			case 'jpg':
+			case 'png':
 				$class = 'far fa-file-image';
 			break;
-			case '.mp3':
+			case 'mp3':
 				$class = 'far fa-file-audio';
 			break;
-			case '.mp4':
+			case 'mp4':
 				$class = 'far fa-file-video';
 			break;
-			case '.pdf':
+			case 'pdf':
 				$class = 'far fa-file-pdf';
 			break;
-			case '.php':
+			case 'php':
 				$class = 'fab fa-php';
 			break;
-			case '.ppt':
-			case '.pptx':
+			case 'ppt':
+			case 'pptx':
 				$class = 'far fa-file-powerpoint';
 			break;
-			case '.rar':
-			case '.zip':
+			case 'rar':
+			case 'zip':
 				$class = 'far fa-file-archive';
 			break;
-			case '.txt':
+			case 'txt':
 				$class = 'far fa-file-alt';
 			break;
-			case '.xls':
-			case '.xlsx':
+			case 'xls':
+			case 'xlsx':
 				$class = 'far fa-file-excel';
 			break;
 			default:
@@ -250,6 +261,34 @@ class File {
 			$msg = array();
 		}
 		return @unlink($this->getFullPath());
+	}
+	
+	/**
+	 * Stabilisce se si puà scaricare il file
+	 * @access public
+	 * @return boolean
+	*/
+	public function canDownload() {
+		return true;
+	}
+	
+	/**
+	 * Scarica il file
+	 * @access public
+	*/
+	public function download() {
+		if ($this->canDownload()) {
+			ob_end_clean();
+			header('Content-Type: application/octet-stream');
+			header('Content-Disposition: attachment; filename="'.$this->getName().'"');
+			header('Content-Transfer-Encoding: binary');
+			header('Expires: 0');
+			header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+			header('Pragma: public');
+			header('Content-Length: '.$this->getSize());
+			readfile($this->getFullPath());
+			exit();
+		}
 	}
 	
 	/**

@@ -75,6 +75,13 @@ class Dir extends File {
 	}
 	
 	/**
+	 * @see File::canDownload()
+	*/
+	public function canDownload() {
+		return false;
+	}
+	
+	/**
 	 * Restituisce i file della cartella
 	 * @access public
 	 * @param array $params parametri vari
@@ -91,10 +98,11 @@ class Dir extends File {
 		$params['info'] = isset($params['info']) && $params['info'];
 		$params['order'] = isset($params['order']) && is_array($params['order']) ? $params['order'] : array();
 		if ($params['info']) {
+			$order_values = $order_types = array();
 			if (isset($params['order']['field']) && is_string($params['order']['field']) && trim($params['order']['field']) !== '') {
 				$do_order = true;
-				$order_values = array();
-				$order_type = isset($params['order']['type']) && $params['order']['type'] == SORT_DESC ? SORT_DESC : SORT_ASC;
+				$order_values[$params['order']['field']] = array();
+				$order_types[$params['order']['field']] = isset($params['order']['type']) && is_scalar($params['order']['type']) && $params['order']['type'] == SORT_DESC ? SORT_DESC : SORT_ASC;
 			} else {
 				$do_order = false;
 			}
@@ -115,16 +123,23 @@ class Dir extends File {
 					'fa_icon' => $file->getFAIcon()
 				);
 				unset($file);
+				if (!isset($order_values['is_dir'])) {
+					$order_values['is_dir'] = array();
+					$order_types['is_dir'] = SORT_DESC;
+				}
+				$order_values['is_dir'][$i] = $files[$i]['is_dir'] ? 1 : 0;
 				if ($do_order) {
-					$order_values[$i] = isset($files[$i][$params['order']['field']]) ? $files[$i][$params['order']['field']] : null;
+					$order_values[$params['order']['field']][$i] = isset($files[$i][$params['order']['field']]) ? $files[$i][$params['order']['field']] : null;
 				}
 			}
-			unset($i, $counter);
-			if ($do_order) {
-				array_multisort($order_values, $order_type, $files);
-				unset($order_values, $order_type);
+			unset($i, $counter, $do_order);
+			if (!empty($order_values)) {
+				foreach ($order_values as $k => $v) {
+					array_multisort($v, isset($order_types[$k]) ? $order_types[$k] : SORT_ASC, $files);
+					unset($k, $v);
+				}
 			}
-			unset($do_order);
+			unset($order_values, $order_types);
 		} else if (!empty($params['order'])) {
 			if (isset($params['order']['type']) && $params['order']['type'] == SORT_DESC) {
 				rsort($files);
@@ -149,7 +164,7 @@ class Dir extends File {
 		$files = $this->getFiles($params);
 		$breadcrumbs = array();
 		$home = array(
-			'label' => '',
+			'label' => 'Home',
 			'fa_icon' => '<span class="fas fa-home"></span>'
 		);
 		$path = $this->getPath();
